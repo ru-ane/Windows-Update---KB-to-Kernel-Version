@@ -1,0 +1,14 @@
+{
+  "github_token": "${{ secrets.GITHUB_TOKEN }}",
+  "repo_name": "your-username/your-repo-name",
+  "pages": {
+    "Windows 10 Version 22H2": {
+      "url": "https://support.microsoft.com/en-us/topic/windows-10-update-history-8127c2c6-6edf-4fdf-8b9f-0f7be1ef3562",
+      "file_path": "windows10_updates.csv"
+    },
+    "Windows 11 Version 24H2": {
+      "url": "https://support.microsoft.com/en-us/topic/windows-11-version-24h2-update-history-0929c747-1815-4543-8461-0160d16f15e5",
+      "file_path": "windows11_updates.csv"
+    }
+  }
+}
