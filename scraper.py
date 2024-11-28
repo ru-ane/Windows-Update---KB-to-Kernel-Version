@@ -7,11 +7,11 @@ from bs4 import BeautifulSoup
 # Function to update or create a file in the GitHub repo
 def update_github_file(repo_name, file_path, token, new_data):
     g = Github(token)
-    repo = g.get_repo(repo_name)
+    repo = g.get_repo("ru-ane/Windows-Update---KB-to-Kernel-Version")
 
     try:
         # Attempt to fetch the existing file
-        file_path = "ru-ane/Windows-Update---KB-to-Kernel-Version/existing_csv"  # Correct string path
+        file_path = "kb_updates.csv"  # Correct string
         file = repo.get_contents(file_path)
         print(f"Found file at {ru-ane/Windows-Update---KB-to-Kernel-Version}. Updating...")
         
