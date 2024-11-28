@@ -11,7 +11,7 @@ def update_github_file(repo_name, file_path, token, new_data):
 
     try:
         # Attempt to fetch the existing file
-        file = repo.get_contents(ru-ane/Windows-Update---KB-to-Kernel-Version)
+        file = repo.get_contents(ru-ane/Windows-Update---KB-to-Kernel-Version/existing_csv)
         print(f"Found file at {ru-ane/Windows-Update---KB-to-Kernel-Version}. Updating...")
         
         # Read existing data
