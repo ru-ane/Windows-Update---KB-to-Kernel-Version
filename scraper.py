@@ -7,12 +7,41 @@ def load_config():
     with open("config.json", "r") as f:
         return json.load(f)
 
+import requests
+from bs4 import BeautifulSoup
+
 def scrape_page(url, os_version):
-    # Placeholder: Replace with actual scraping logic
-    # Example data simulates scraped output
-    return [
-        {"Date": "2024-11-27", "KB Number": "KB123456", "OS Build": "19045.2546", "OS Version": os_version, "Notes": "Example Note"}
-    ]
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"Failed to fetch {url}. Status code: {response.status_code}")
+        return []
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Adjust this based on the structure of the webpage
+    updates_table = soup.find('table')  # Find the first table
+    if not updates_table:
+        print(f"No table found on {url}")
+        return []
+
+    rows = updates_table.find_all('tr')
+    data = []
+
+    for row in rows[1:]:  # Skip the header row
+        cells = row.find_all('td')
+        if len(cells) < 5:  # Adjust based on the number of expected columns
+            continue
+
+        data.append({
+            "Date": cells[0].text.strip(),
+            "KB Number": cells[1].text.strip(),
+            "OS Build": cells[2].text.strip(),
+            "OS Version": os_version,
+            "Notes": cells[3].text.strip() if len(cells) > 3 else ""
+        })
+
+    return data
+
 
 def update_github_file(repo, file_path, new_data):
     try:
