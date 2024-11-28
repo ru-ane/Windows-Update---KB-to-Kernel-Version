@@ -10,6 +10,10 @@ def load_config():
 import requests
 from bs4 import BeautifulSoup
 
+import requests
+from bs4 import BeautifulSoup
+import re
+
 def scrape_page(url, os_version):
     response = requests.get(url)
     if response.status_code != 200:
@@ -18,29 +22,39 @@ def scrape_page(url, os_version):
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Adjust this based on the structure of the webpage
-    updates_table = soup.find('table')  # Find the first table
-    if not updates_table:
-        print(f"No table found on {url}")
-        return []
-
-    rows = updates_table.find_all('tr')
+    # Find all anchor tags with the specified class
+    links = soup.find_all('a', class_='supLeftNavLink')
     data = []
 
-    for row in rows[1:]:  # Skip the header row
-        cells = row.find_all('td')
-        if len(cells) < 5:  # Adjust based on the number of expected columns
-            continue
+    # Regular expression to extract the KB number and OS build
+    kb_pattern = re.compile(r'KB\d+')  # Matches 'KB' followed by digits
+    build_pattern = re.compile(r'OS Build \d+\.\d+')  # Matches 'OS Build' followed by numbers
 
+    for link in links:
+        text = link.text.strip()
+        href = link.get('href', '')
+
+        # Extract the date, KB number, OS build, and notes from the link text
+        date_match = re.match(r'^[A-Za-z]+\s+\d{1,2},\s+\d{4}', text)
+        kb_match = kb_pattern.search(text)
+        build_match = build_pattern.search(text)
+
+        date = date_match.group(0) if date_match else "Unknown"
+        kb_number = kb_match.group(0) if kb_match else "Unknown"
+        os_build = build_match.group(0).replace("OS Build ", "") if build_match else "Unknown"
+        notes = text.split('—', 1)[-1].strip() if '—' in text else text
+
+        # Append the extracted data as a dictionary
         data.append({
-            "Date": cells[0].text.strip(),
-            "KB Number": cells[1].text.strip(),
-            "OS Build": cells[2].text.strip(),
+            "Date": date,
+            "KB Number": kb_number,
+            "OS Build": os_build,
             "OS Version": os_version,
-            "Notes": cells[3].text.strip() if len(cells) > 3 else ""
+            "Notes": notes
         })
 
     return data
+
 
 
 def update_github_file(repo, file_path, new_data):
