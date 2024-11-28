@@ -26,3 +26,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scraper.py
 
+permissions:
+  contents: write
+
