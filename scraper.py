@@ -45,7 +45,7 @@ def main():
     with open('config.json') as f:
         config = json.load(f)
 
-    token = config['wu_token']
+    token = config['github_token']
     repo_name = config['repo_name']
     
     for os_version, details in config['pages'].items():
