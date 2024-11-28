@@ -1,75 +1,70 @@
 import os
-import pandas as pd
+import csv
+import json
 from github import Github
-import requests
-from bs4 import BeautifulSoup
 
-# Function to update or create a file in the GitHub repo
-def update_github_file(repo_name, file_path, token, new_data):
-    g = Github(token)
-    repo = g.get_repo("ru-ane/Windows-Update---KB-to-Kernel-Version")
+def load_config():
+    with open("config.json", "r") as f:
+        return json.load(f)
 
-    try:
-        # Attempt to fetch the existing file
-        file_path = "kb_updates.csv"  # Correct string
-        file = repo.get_contents(file_path)
-        print(f"Found file at {ru-ane/Windows-Update---KB-to-Kernel-Version}. Updating...")
-        
-        # Read existing data
-        existing_csv = pd.read_csv(file.download_url)
-        
-        # Prepare new data
-        new_df = pd.DataFrame(new_data, columns=['Date', 'KB Number', 'OS Build', 'OS Version', 'Notes'])
-        updated_df = pd.concat([existing_csv, new_df]).drop_duplicates()
-        
-        # Commit updated file
-        repo.update_file(
-            path=file_path,
-            message="Update KB data",
-            content=updated_df.to_csv(index=False),
-            sha=file.sha,
-        )
-    except Exception as e:
-        # Handle the case where the file does not exist
-        if "404" in str(e):  # File not found
-            print(f"File not found at {file_path}. Creating new file...")
-            
-            # Prepare new data
-            new_df = pd.DataFrame(new_data, columns=['Date', 'KB Number', 'OS Build', 'OS Version', 'Notes'])
-            
-            # Commit new file
-            repo.create_file(
-                path=file_path,
-                message="Create KB data file",
-                content=new_df.to_csv(index=False),
-            )
-        else:
-            # Raise unexpected errors
-            raise e
-
-# Function to scrape the webpage for data
-def scrape_webpage(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    # Example: Replace with actual scraping logic
-    # Assume we extract the following data
-    scraped_data = [
-        ["2024-11-21", "KB5046714", "19045.5198", "Windows 10", "Preview"],
-        ["2024-11-12", "KB5046613", "19044.5131", "Windows 10", ""],
+def scrape_page(url, os_version):
+    # Placeholder: Replace with actual scraping logic
+    # Example data simulates scraped output
+    return [
+        {"Date": "2024-11-27", "KB Number": "KB123456", "OS Build": "19045.2546", "OS Version": os_version, "Notes": "Example Note"}
     ]
-    return scraped_data
 
-# Main logic
+def update_github_file(repo, file_path, new_data):
+    try:
+        # Try to fetch the file (if it exists)
+        file = repo.get_contents(kb_updates.csv)
+        existing_content = file.decoded_content.decode("utf-8")
+        
+        # Append new data to existing content
+        existing_data = list(csv.DictReader(existing_content.splitlines()))
+        all_data = existing_data + new_data
+    except Exception as e:
+        # File not found (create a new file)
+        all_data = new_data
+
+    # Ensure no duplicate rows
+    unique_data = {tuple(item.items()): item for item in all_data}.values()
+
+    # Write CSV content
+    csv_output = "Date,KB Number,OS Build,OS Version,Notes\n" + "\n".join(
+        [",".join(item.values()) for item in unique_data]
+    )
+
+    # Update or create the file on GitHub
+    commit_message = "Update Windows updates data"
+    if "file" in locals():
+        repo.update_file(file_path, commit_message, csv_output, file.sha)
+    else:
+        repo.create_file(file_path, commit_message, csv_output)
+
+def main():
+    config = load_config()
+
+    # Use GITHUB_TOKEN from the environment
+    github_token = os.getenv("GITHUB_TOKEN")
+    if not github_token:
+        raise ValueError("GITHUB_TOKEN environment variable not found. Ensure it's set in the workflow.")
+
+    repo_name = config["repo_name"]
+    output_file_path = config["output_file_path"]
+    pages = config["pages"]
+
+    g = Github(github_token)
+    repo = g.get_repo(repo_name)
+
+    all_scraped_data = []
+    for page_name, page_info in pages.items():
+        url = page_info["url"]
+        print(f"Scraping updates from {url} for {page_name}")
+        scraped_data = scrape_page(url, page_name)
+        all_scraped_data.extend(scraped_data)
+
+    update_github_file(repo, output_file_path, all_scraped_data)
+
 if __name__ == "__main__":
-    # Replace with actual variables
-    repo_name = "ru-ane/Windows-Update---KB-to-Kernel-Version"  # Example: "octocat/Hello-World"
-    file_path = "kb_updates.csv"
-    token = os.getenv("GITHUB_TOKEN")  # Ensure this is set in your environment
-    url = "https://example.com/windows-updates"  # Replace with the real URL
-    
-    # Step 1: Scrape data
-    scraped_data = scrape_webpage(url)
-    
-    # Step 2: Update the GitHub file
-    update_github_file(repo_name, file_path, token, scraped_data)
+    main()
