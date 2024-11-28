@@ -64,7 +64,7 @@ def scrape_webpage(url):
 if __name__ == "__main__":
     # Replace with actual variables
     repo_name = "ru-ane/Windows-Update---KB-to-Kernel-Version"  # Example: "octocat/Hello-World"
-    file_path = "data/kb_updates.csv"
+    file_path = "kb_updates.csv"
     token = os.getenv("GITHUB_TOKEN")  # Ensure this is set in your environment
     url = "https://example.com/windows-updates"  # Replace with the real URL
     
